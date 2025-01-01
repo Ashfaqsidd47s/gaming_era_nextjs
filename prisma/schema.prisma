@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(100)
+  username     String   @unique @db.VarChar(100)
+  email        String   @unique @db.VarChar(100)
+  password     String   @db.VarChar(100)
+  profileImage String?  @db.VarChar(255)
+  coverImage   String?  @db.VarChar(255)
+  
+  createdAt    DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relations
+  posts        Post[]
+  comments     Comment[]
+  groups       Group[]
+
+  FollowRequestSender FollowRequest[] @relation("SentRequests")
+  FollowRequestReciever FollowRequest[] @relation("ReceivedRequests")
+
+  Member Member[]
+  ConversationUser1 Conversation[] @relation("User1Conversation")
+  ConversationUser2 Conversation[] @relation("User2Conversation")
+
+  Message Message[]
+
+  GroupJoinRequest GroupJoinRequest[] @relation("SentRequests")
+
+  Follow Follow[] @relation("Follower")
+  Following Follow[] @relation("Following")
+}
+
+model Follow {
+  id String @id @default(uuid()) @db.Uuid
+  followerId  String   @db.Uuid
+  followingId String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
+
+model Post {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  content   String   @db.VarChar(500)
+  img       String?  @db.VarChar(200)
+  likes     String[] @default([]) @db.Uuid  // Likes should store UUIDs
+  comments  Comment[]
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  
+  // Relation with User
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+model Comment {
+  id        String   @id @default(uuid()) @db.Uuid
+  postId    String   @db.Uuid
+  userId    String   @db.Uuid
+  text      String   @db.VarChar(300)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum FollowRequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+model FollowRequest {
+  id          String              @id @default(uuid()) @db.Uuid
+  senderId    String              @db.Uuid
+  recieverId  String              @db.Uuid
+  status      FollowRequestStatus  @default(pending)
+  isVisited   Boolean              @default(false)
+  createdAt   DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime            @default(now()) @db.Timestamp(6)
+
+  sender      User                @relation("SentRequests", fields: [senderId], references: [id])
+  reciever    User                @relation("ReceivedRequests", fields: [recieverId], references: [id])
+
+  @@unique([senderId, recieverId])
+}
+
+
+model Group {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String   @db.VarChar(100)
+  adminName       String   @db.VarChar(100)
+  adminId         String   @db.Uuid
+  isPublic        Boolean  @default(true)
+  description     String?  @db.VarChar(500)
+  groupImage      String?  @db.VarChar(255)
+  groupCoverImage String?  @db.VarChar(255)
+  createdAt       DateTime @default(now()) @db.Timestamp(6)
+  updatedAt       DateTime @default(now()) @db.Timestamp(6)
+
+  members         Member[]
+
+  Conversation Conversation[]
+
+  user      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  GroupJoinRequest GroupJoinRequest[] @relation("group")
+}
+
+
+model GroupJoinRequest {
+  id          String              @id @default(uuid()) @db.Uuid
+  senderId    String              @db.Uuid
+  groupId     String              @db.Uuid
+  status      FollowRequestStatus  @default(pending)
+  isVisited   Boolean              @default(false)
+  createdAt   DateTime            @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime            @default(now()) @db.Timestamp(6)
+
+  sender      User                @relation("SentRequests", fields: [senderId], references: [id])
+  group    Group                @relation("group", fields: [groupId], references: [id])
+
+  @@unique([senderId, groupId])
+}
+
+
+model Member {
+  id        String   @id @default(uuid()) @db.Uuid
+  groupId   String   @db.Uuid
+  userId    String   @db.Uuid
+  role      String   @default("member") @db.VarChar(20)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+
+  group     Group    @relation(fields: [groupId], references: [id] , onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+enum ConversationType {
+  group
+  private
+}
+
+model Conversation {
+  id                String   @id @default(uuid()) @db.Uuid
+  conversationType  ConversationType
+  groupId           String?  @db.Uuid
+  user1Id           String?  @db.Uuid
+  user2Id           String?  @db.Uuid
+  createdAt         DateTime @default(now()) @db.Timestamp(6)
+  updatedAt         DateTime @default(now()) @db.Timestamp(6)
+
+  group             Group?   @relation(fields: [groupId], references: [id]) 
+  user1             User?    @relation("User1Conversation", fields: [user1Id], references: [id])
+  user2             User?    @relation("User2Conversation", fields: [user2Id], references: [id])
+
+  Message Message[]
+}
+
+model Message {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @db.Uuid
+  senderId       String   @db.Uuid
+  message        String   @db.VarChar(500)
+  createdAt      DateTime @default(now()) @db.Timestamp(6)
+  isRead         Boolean  @default(false)
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation(fields: [senderId], references: [id])
+}
+
