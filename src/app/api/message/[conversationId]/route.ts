@@ -31,6 +31,8 @@ export async function POST(request: Request) {
                 senderId: body.senderId,
             }
         })
+        return NextResponse.json({message}, {status: 200})
+        
     } catch (error) {
         return NextResponse.json({error: "something went wrong"}, {status: 500})
     }

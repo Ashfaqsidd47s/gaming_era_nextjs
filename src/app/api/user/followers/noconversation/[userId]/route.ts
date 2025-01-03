@@ -6,7 +6,7 @@ import { NextResponse } from "next/server"
 // GET USER DATA
 export async function GET(req: Request) {
     try {
-        const userId = req.url.split("user/followers/")[1]
+        const userId = req.url.split("user/followers/noconversation/")[1]
         const authUser = await getAuthUser();
         if(!authUser || authUser.id != userId){
             return NextResponse.json({
@@ -16,8 +16,25 @@ export async function GET(req: Request) {
         const followings = await prisma.user.findMany({
             where: {
                 Follow: {
-                    some: {followingId: userId}
-                }
+                    some: {
+                        followerId: userId,
+                    }
+                },
+                AND: [
+                    {
+                        ConversationUser1: {
+                            none: {
+                                user2Id: userId,
+                            }
+                        },
+                        ConversationUser2: {
+                            none: {
+                                user1Id: userId,
+                            }
+                        },
+                        NOT: {id: userId}
+                    }
+                ]
             },
             select: {
                 id: true,

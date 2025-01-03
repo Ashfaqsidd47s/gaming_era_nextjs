@@ -12,6 +12,7 @@ export async function GET(request: Request) {
         }
         const personalConversations = await prisma.user.findMany({
             where: {
+                id: {not: userId },
                 OR: [
                     {
                         ConversationUser1: {
@@ -19,12 +20,11 @@ export async function GET(request: Request) {
                         }, 
                     },
                     {
-                        ConversationUser1: {
+                        ConversationUser2: {
                             some: {user1Id: userId}
                         }
                     }
                 ],
-                id: {not: userId },
             },
             select: {
                 id: true,
@@ -45,6 +45,18 @@ export async function GET(request: Request) {
                 },
             }
         })
+        const simplifiedConversations = personalConversations.map(user => ({
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            profileImage: user.profileImage,
+            conversationId:
+              user.ConversationUser1.length > 0
+                ? user.ConversationUser1[0].id
+                : user.ConversationUser2.length > 0
+                ? user.ConversationUser2[0].id
+                : null,
+          }));
         const groups = await prisma.group.findMany({
             where: {
                 members: {
@@ -72,8 +84,9 @@ export async function GET(request: Request) {
                 }
             }
         })
-        return NextResponse.json({personal: personalConversations, group: groupConversation}, {status: 200})
+        return NextResponse.json({personal: simplifiedConversations, group: groupConversation}, {status: 200})
     } catch (error) {
+        console.log(error)
         return NextResponse.json({error: "something went wrong"}, {status: 500})
     }
 }

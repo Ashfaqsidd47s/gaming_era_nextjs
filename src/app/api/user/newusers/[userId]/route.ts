@@ -18,27 +18,14 @@ export async function GET(req: Request) {
                 id: {
                     not: userId,
                 },
-                Follow: {
-                    none: {
-                        followerId: userId, // Exclude users already followed by the current user
+                AND: {
+                    Following:{
+                        none: { followerId: userId}
                     },
+                    FollowRequestReciever: {
+                        none: { senderId: userId}
+                    }
                 }
-                // AND: [
-                //     {
-                //         Follow: {
-                //         none: {
-                //             followerId: userId, // Exclude users already followed by the current user
-                //         },
-                //         },
-                //     },
-                //     {
-                //         FollowRequestReciever: {
-                //         none: {
-                //             senderId: userId, // Exclude users who already received a follow request from the current user
-                //         },
-                //         },
-                //     },
-                // ],
             },
             select: {
                 id: true,

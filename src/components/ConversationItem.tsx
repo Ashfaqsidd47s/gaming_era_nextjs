@@ -1,4 +1,5 @@
-import Link from 'next/link';
+"use client"
+
 import React from 'react'
 
 interface conversationProp  {
@@ -7,13 +8,17 @@ interface conversationProp  {
     username: string;
     lastSeen: string;
     profileImage: string;
+    conversationId: string;
 }
 
 
-export default function ConversationItem({id, name, username, lastSeen, profileImage}: conversationProp) {
+export default function ConversationItem({id, name, username, lastSeen, profileImage, conversationId}: conversationProp) {
+  
+  
+
   return (
-    <Link href={`messages/${id}`} >
-    <div className=' border  p-2 flex items-center gap-2 cursor-pointer rounded-md shadow-md'>
+    <div 
+      className=' border  p-2 flex items-center gap-2 cursor-pointer rounded-md shadow-md'>
       <div className=' w-[50px] h-[50px] rounded-full flex items-center justify-center '>
         <img
           className='w-full h-full object-cover object-center' 
@@ -27,6 +32,5 @@ export default function ConversationItem({id, name, username, lastSeen, profileI
         <p>{username}</p>
       </div>
     </div>
-    </Link>
   )
 }

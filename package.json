@@ -29,6 +29,7 @@
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "timeago.js": "^4.0.2",
+    "ws": "^8.18.0",
     "zod": "^3.23.8",
     "zustand": "^5.0.1"
   },
@@ -37,6 +38,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/ws": "^8.5.13",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",

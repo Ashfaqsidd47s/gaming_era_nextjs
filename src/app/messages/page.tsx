@@ -5,6 +5,7 @@ import UserSuggestionSkeleton from '@/components/skeletons/UserSuggestionSkeleto
 import UserItem from '@/components/UserItem';
 import userStore from '@/store/userStore'
 import axios from 'axios'
+import Link from 'next/link';
 import React, { useEffect, useState } from 'react'
 
 
@@ -19,9 +20,10 @@ interface ConversationsData {
   id: string;
   name: string;
   username: string;
-  lastseen: string;
   profileImage: string;
+  conversationId: string;
 }
+
 
 export default function page() {
   const [isRequestingFollowrs, setIsRequestingFollowers] = useState(false);
@@ -59,7 +61,7 @@ export default function page() {
       try {
         setIsRequestingCon(true)
         const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/conversation/" + user?.id)
-        console.log(res.data);
+        setConversations(res.data.personal)
         setIsRequestingCon(false)
       } catch (err) {
         setIsRequestingCon(false)
@@ -71,8 +73,7 @@ export default function page() {
 
       try {
         setIsRequestingFollowers(true)
-        const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user/followers/" + user?.id)
-        console.log(res.data)
+        const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user/followers/noconversation/" + user?.id)
         setFollowers(res.data)
         setIsRequestingFollowers(false)
       } catch (err) {
@@ -89,25 +90,35 @@ export default function page() {
   return (
     <div className='  min-h-[calc(100vh-82px)]'>
       <div className={`p-3 border-b border-b-primary/90 ${conversations.length == 0? " hidden": "block"}`}>
-        {conversations.map((c) => (
-          <ConversationItem 
-            id={c.id}
-            name={c.name}
-            username={c.username}
-            profileImage={c.profileImage}
-            lastSeen={c.lastseen}
-          />
+        {isRequestingCon ?
+           <div>
+           <UserSuggestionSkeleton />
+           <UserSuggestionSkeleton />
+           <UserSuggestionSkeleton />
+         </div>
+        :conversations.map((c) => (
+          <Link 
+            key={c.id}
+            href={"/messages/" + c.conversationId}>
+            <ConversationItem 
+              id={c.id}
+              name={c.name}
+              username={c.username}
+              profileImage={c.profileImage}
+              lastSeen="12pm"
+              conversationId={c.conversationId}
+              />
+            </Link>
         ))}
       </div>
       <div className='p-3 '>
-        {isRequestingFollowrs ? 
-        <>
+        {isRequestingFollowrs ? <div>
           <UserSuggestionSkeleton />
           <UserSuggestionSkeleton />
           <UserSuggestionSkeleton />
-        </>
-        :followers.map((f)=> (
+        </div>: followers.map((f)=> (
           <UserItem 
+            key={f.id}
             id={f.id}
             name={f.name}
             username={f.username}

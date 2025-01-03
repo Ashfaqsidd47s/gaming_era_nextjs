@@ -87,7 +87,7 @@ export default function Sidebar() {
             getUser()
         }
 
-        updatePageRoute(pathname.substring(1))
+        updatePageRoute(pathname.split("/")[1])
     }, [pathname])
     
 

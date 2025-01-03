@@ -18,7 +18,7 @@ export async function POST(request:Request) {
             const conversation = await prisma.conversation.create({
                 data: {
                     conversationType: "private",
-                    user1Id: body.uesr1Id,
+                    user1Id: body.user1Id,
                     user2Id: body.user2Id
                 }
             })
