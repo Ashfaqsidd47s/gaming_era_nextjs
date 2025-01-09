@@ -90,6 +90,7 @@ export default function page() {
             try {
                 setIsLoadingUser(true)
                 const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/conversation/user/" + conversationId)
+                console.log(res.data)
                 setUserData(res.data.user)
                 setIsLoadingUser(false)
             } catch (err) {

@@ -8,7 +8,7 @@ export default function layout({children}:{children: React.ReactNode}) {
   return (
     <div className=" w-full flex flex-col items-center relative">
       <Navbar />
-      <div className=" w-full min-h-[calc(100vh-82px)] lg:w-[75%] flex relative">
+      <div className=" w-full min-h-[calc(100vh-82px)] lg:w-[75%] flex relative bg-[#281040]">
             <div className="md:w-[10%] lg:w-[25%] bg-red-300 ">
               <Sidebar />
             </div>

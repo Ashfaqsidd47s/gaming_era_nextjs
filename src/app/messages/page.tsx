@@ -24,12 +24,23 @@ interface ConversationsData {
   conversationId: string;
 }
 
+interface GroupConversations {
+  id: string;
+  name: string;
+  description: string;
+  groupImage: string;
+  members: number;
+  conversation: {
+    id: string;
+  };
+}
 
 export default function page() {
   const [isRequestingFollowrs, setIsRequestingFollowers] = useState(false);
   const [isRequestingCon, setIsRequestingCon] = useState(false);
   const user = userStore((state) => state.user)
   const [conversations, setConversations] = useState<ConversationsData[]>([])
+  const [groupConversations, setGroupConversations] = useState<GroupConversations[]>([])
   const [followers, setFollowers] = useState<UserData[]>([])
 
 
@@ -62,6 +73,7 @@ export default function page() {
         setIsRequestingCon(true)
         const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/conversation/" + user?.id)
         setConversations(res.data.personal)
+        setGroupConversations(res.data.groups)
         setIsRequestingCon(false)
       } catch (err) {
         setIsRequestingCon(false)

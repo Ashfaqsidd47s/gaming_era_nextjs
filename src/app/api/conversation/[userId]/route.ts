@@ -56,35 +56,25 @@ export async function GET(request: Request) {
                 : user.ConversationUser2.length > 0
                 ? user.ConversationUser2[0].id
                 : null,
-          }));
-        const groups = await prisma.group.findMany({
-            where: {
-                members: {
-                    some: {id: userId}
-                }
-            },
-            select: {id: true}
-        })
+        }));
 
-        const groupIds = groups.map( group => group.id)
-        const groupConversation = await prisma.conversation.findMany({
-            where: {
-                conversationType: "group",
-                groupId: {in: groupIds}
+        const groupConversation = await prisma.group.findMany({
+            where:{
+                members: {
+                    some: {userId: userId}
+                }
             },
             select: {
                 id: true,
-                groupId: true,
-                group: {
-                    select: {
-                        name: true,
-                        description: true,
-                        groupImage: true
-                    }
+                name: true,
+                groupImage: true, 
+                description: true,
+                Conversation: {
+                    select: { id: true}
                 }
             }
         })
-        return NextResponse.json({personal: simplifiedConversations, group: groupConversation}, {status: 200})
+        return NextResponse.json({personal: simplifiedConversations, groups: groupConversation}, {status: 200})
     } catch (error) {
         console.log(error)
         return NextResponse.json({error: "something went wrong"}, {status: 500})
