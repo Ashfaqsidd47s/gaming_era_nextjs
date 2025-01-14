@@ -1,36 +1,22 @@
 "use client"
 
 import React, { useState } from "react";
-import { z, ZodType } from "zod";
+import { IoMail } from "react-icons/io5";
 
 interface InputContainerProps {
-  label: string;
   type?: string;
   placeholder: string;
   getValue: (value: string) => void;
-  validationSchema: ZodType<any>; 
+  icon?: any
 }
 
-const InputContainer: React.FC<InputContainerProps> = ({
-  label,
+export default function InputContainer ({
   type = "text",
   placeholder,
   getValue,
-  validationSchema,
-}) => {
-  const [value, setValue] = useState<string>("");
-  const [error, setError] = useState<string>("");
-  const [touched, setTouched] = useState<boolean>(false);
-
-  const handleBlur = () => {
-    setTouched(true);
-    try {
-      validationSchema.parse(value); // Validate value with Zod schema
-      setError(""); // Clear error if valid
-    } catch (err: any) {
-      setError(err.errors?.[0]?.message || "Invalid input"); // Set the first validation error message
-    }
-  };
+  icon
+} : InputContainerProps ) {
+  const [value, setValue] = useState<string>("");  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
@@ -39,26 +25,17 @@ const InputContainer: React.FC<InputContainerProps> = ({
   };
 
   return (
-    <div className=" input-container py-1">
-        <label className="block mb-1 font-semibold ">
-            {label}
-        </label>
-        <input
-            type={type}
-            placeholder={placeholder}
-            value={value}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onFocus={() => setTouched(false)} // Reset error visibility on focus
-            className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm ${
-                error && touched ? "border-destructive" : "border-input"
-              }`}
-      />
-      {touched && error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
-      )}
+    <div className=" mb-1 input-container py-1  rounded-lg w-full min-w-[250px]">
+        <div className="p-1 px-2 rounded-lg flex items-center relative">
+           <span className=" absolute left-4 font-medium" >{icon? icon :<IoMail />}</span>
+          <input
+              type={type}
+              placeholder={placeholder}
+              value={value}
+              onChange={handleChange}
+              className={`bg-background w-full p-2 pl-9 outline-none focus:outline-none text-primary-foreground border-2 border-primary-foreground/50 rounded-lg focus:border-primary`}
+          />
+        </div>
     </div>
   );
 };
-
-export default InputContainer;

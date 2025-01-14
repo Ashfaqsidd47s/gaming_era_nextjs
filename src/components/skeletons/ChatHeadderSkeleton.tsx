@@ -4,7 +4,7 @@ import Skeletone from './Skeletone'
 
 export default function ChatHeadderSkeleton() {
   return (
-    <div className=' px-4 bg-white w-full h-[55px] shadow-lg flex items-center justify-between absolute top-[0px]'>
+    <div className=' px-4 bg-card w-full h-[55px] shadow-lg flex items-center justify-between absolute top-[0px] border-x border-x-popover'>
         <div className='flex items-center gap-3'>
             <div className=' w-[40px] h-[40px] rounded-full overflow-hidden flex items-center justify-center shadow-sm '>
                 <Skeletone />

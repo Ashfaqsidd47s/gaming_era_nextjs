@@ -24,6 +24,18 @@ export async function GET(request:Request) {
                 name: true,
                 description: true,
                 groupImage: true,
+                members:{
+                    take: 5,
+                    select:{
+                        user:{
+                            select:{
+                                profileImage: true
+                            }
+                            
+                        }
+                    }
+                    
+                }
             }
         })
         

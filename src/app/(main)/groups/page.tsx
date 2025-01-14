@@ -13,6 +13,7 @@ interface GroupsInfo {
   name: string;
   descdescription: string;
   groupImage: string;
+  members: {user: {profileImage: string}}[]
 }
 
 export default function page() {
@@ -42,7 +43,6 @@ export default function page() {
       setIsLoadin(true)
       const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/groups/user/my/" + user?.id)
       setIsLoadin(false)
-      console.log(res.data)
       setGroups(res.data.groups)
     } catch (err) {
       setIsLoadin(false)
@@ -97,7 +97,7 @@ export default function page() {
           <div>
 
           </div>:
-          <div>
+          <div className='flex flex-col items-center gap-2 w-full'>
             {currentGroup == "mygroup"? 
               <div className='p-4 w-full flex items-center justify-center'>
                 <button
@@ -115,7 +115,7 @@ export default function page() {
             :<></>
             }
             {isLoading?
-              <div>
+              <div className='w-full'>
                   <UserSuggestionSkeleton />
                   <UserSuggestionSkeleton />
                   <UserSuggestionSkeleton />
@@ -127,6 +127,7 @@ export default function page() {
                   name={group.name}
                   description={group.descdescription}
                   groupImage={group.groupImage}
+                  members={group.members}
                 />
               ))
             }

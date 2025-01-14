@@ -18,6 +18,18 @@ export async function GET(request: Request) {
                 adminName: true,
                 groupImage: true,
                 groupCoverImage: true,
+                members:{
+                    take: 5,
+                    select:{
+                        user:{
+                            select:{
+                                profileImage: true
+                            }
+                            
+                        }
+                    }
+                    
+                }
             }
         })
         

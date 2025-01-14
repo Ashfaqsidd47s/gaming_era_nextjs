@@ -3,9 +3,9 @@ import Skeletone from './Skeletone'
 
 export default function UserSuggestionSkeleton() {
   return (
-    <div className='p-3  flex items-center justify-between gap-3 rounded-md'>
+    <div className='p-3 flex items-center justify-between gap-3 rounded-md'>
       <div
-            className='flex-none w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center'
+            className='flex-none w-[50px] h-[50px] rounded-full bg-primary-foreground/30 flex items-center justify-center'
         >
             <Skeletone />
         </div>

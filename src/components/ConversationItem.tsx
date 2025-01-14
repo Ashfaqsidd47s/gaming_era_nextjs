@@ -18,8 +18,8 @@ export default function ConversationItem({id, name, username, lastSeen, profileI
 
   return (
     <div 
-      className=' border  p-2 flex items-center gap-2 cursor-pointer rounded-md shadow-md'>
-      <div className=' w-[50px] h-[50px] rounded-full flex items-center justify-center '>
+      className='  p-2 flex items-center gap-2 cursor-pointer rounded-md bg-card shadow-md'>
+      <div className=' w-[50px] h-[50px] rounded-full flex items-center justify-center overflow-hidden'>
         <img
           className='w-full h-full object-cover object-center' 
           src={profileImage} alt="" />
@@ -27,9 +27,9 @@ export default function ConversationItem({id, name, username, lastSeen, profileI
       <div>
         <h2 className=' font-semibold text-lg'>
             {name} 
-            <span className=' text-sm text-primary/80 font-semibold'>{lastSeen}</span>
+            <span className=' text-sm text-muted/90 font-semibold m-2'>{lastSeen}</span>
         </h2>
-        <p>{username}</p>
+        <p className=' text-muted'>{username}</p>
       </div>
     </div>
   )

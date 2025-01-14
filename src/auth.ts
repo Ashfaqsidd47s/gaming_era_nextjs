@@ -12,6 +12,7 @@ interface JwtPayload {
     email: string;
     username: string;
     name: string;
+    profileImage: string;
 }
 
 export const encryptJwt = async (user: User) => {
@@ -21,6 +22,7 @@ export const encryptJwt = async (user: User) => {
             email: user.email,
             username: user.username,
             name: user.name,
+            profileImage: user.profileImage
         }).setProtectedHeader({alg: 'HS256'})
         .setExpirationTime(JWT_EXPIRATION_TIME)
         .sign(JWT_SECRET);
@@ -70,7 +72,8 @@ export const updateJwt = async (refereshToken: string): Promise<boolean> => {
             id: userData.id,
             email: userData.email,
             name: userData.name,
-            username: userData.username
+            username: userData.username,
+            profileImage: userData.profileImage
         }).setProtectedHeader({alg: 'HS256'})
         .setExpirationTime(JWT_EXPIRATION_TIME)
         .sign(JWT_SECRET);

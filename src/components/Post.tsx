@@ -48,10 +48,10 @@ export default function Post({id, content, username, postedAt, img, userImg, lik
     }
 
   return (
-    <div className=' bg-green-200 p-4 rounded-md'>
-        <header className='py-3 bg-fuchsia-200 flex items-center justify-between gap-3'>
+    <div className=' p-4 rounded-md bg-popover'>
+        <header className='py-3  flex items-center justify-between gap-3'>
             <div
-                className='w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center'
+                className='w-[50px] h-[50px] rounded-full  flex items-center justify-center'
             >
                 <img 
                     src={userImg ? userImg: "/avatar.png"} 
@@ -63,10 +63,10 @@ export default function Post({id, content, username, postedAt, img, userImg, lik
                 <h2 className=' text-xl font-semibold'>
                     {username}
                 </h2>
-                <p  className=' text-sm text-primary/80'><TimeAgo date={postedAt} /></p>
+                <p  className=' text-sm text-muted'><TimeAgo date={postedAt} /></p>
             </div>
             <div
-                className='w-[40px] h-[40px] rounded-full bg-gray-200 flex items-center justify-center text-xl' 
+                className='w-[40px] h-[40px] rounded-full  flex items-center justify-center text-xl bg-card' 
             >
                 <BsThreeDotsVertical />
             </div>
@@ -88,9 +88,9 @@ export default function Post({id, content, username, postedAt, img, userImg, lik
         >
             <div className=' flex items-center gap-3'>
                 <button className='flex gap-1 items-center text-red-500 font-semibold' onClick={updateLike}>
-                    {curIsLiked ? <IoMdHeart className=' text-3xl' /> : <IoMdHeartEmpty className='text-3xl' />}{curLikes > 0 ? curLikes: "Be first to "}{curLikes > 1 ? " Likes" : " Like"}
+                    {curIsLiked ? <IoMdHeart className=' text-3xl' /> : <IoMdHeartEmpty className='text-3xl' />}{curLikes > 0 ? curLikes: " "}{curLikes > 1 ? " Likes" : " Like"}
                 </button>
-                <button className='flex gap-1 items-center  text-primary/90' >
+                <button className='flex gap-1 items-center text-muted' >
                     <MdComment className='text-2xl' />
                     {`${comments} comment${comments > 1 ?'s' : ''}`}
                 </button>

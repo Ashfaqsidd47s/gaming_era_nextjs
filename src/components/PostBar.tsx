@@ -38,10 +38,10 @@ export default function PostBar() {
     }
 
   return (
-    <div className=' p-4 bg-secondary flex flex-col gap-1 rounded-2xl'>
-        <div className=' p-1 flex items-center bg-red-100 relative'>
+    <div className=' p-4 flex flex-col gap-1 rounded-2xl bg-card glowing-bg'>
+        <div className=' p-1 flex items-center  relative'>
             <div
-                className='w-[40px] h-[40px] rounded-full flex items-center justify-center bg-secondary absolute left-1 '
+                className='w-[40px] h-[40px] rounded-full flex items-center justify-center  absolute left-1 '
             >
             <Image
                 src="/avatar.png"
@@ -51,13 +51,13 @@ export default function PostBar() {
                 />
             </div>
             <input
-                className='px-[50px] w-full h-[40px] rounded-[20px] focus:border-none focus:outline-none' 
+                className='px-[50px] w-full h-[40px] rounded-[20px] focus:border-none focus:outline-none bg-popover' 
                 type="text" 
                 placeholder='Share something'
                 onChange={(e)=> setPostContent(e.target.value)}
             />
             <div
-                className='w-[40px] h-[40px] rounded-full flex items-center justify-center bg-secondary absolute right-1 '
+                className='w-[40px] h-[40px] rounded-full flex items-center justify-center absolute bg-card right-1 '
             >
                 <MdOutlineEmojiEmotions className=' text-xl' />
             </div>

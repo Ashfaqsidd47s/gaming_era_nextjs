@@ -7,6 +7,7 @@ interface UserInterface {
   email: string;
   username: string;
   name: string;
+  profileImage: string;
 }
 
 type UserType = {

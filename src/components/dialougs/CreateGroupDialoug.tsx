@@ -4,10 +4,10 @@ import { MdClose } from 'react-icons/md';
 import InputContainer from '../InputContainer';
 import { z } from 'zod';
 import { CldUploadWidget } from 'next-cloudinary';
-import { FaImages } from 'react-icons/fa';
 import userStore from '@/store/userStore';
 import axios from 'axios';
 import { BiLoaderAlt } from 'react-icons/bi';
+import { TbFileDescription } from "react-icons/tb";
 
 interface CreateGroupDialogProps {
     onCancel: () => void;
@@ -16,7 +16,7 @@ interface CreateGroupDialogProps {
 }
 
 const nameSchema = z.string().min(3, "Name must contain atleast 3 character")
-const descriptionSchema = z.string().min(0, "its an optional thing")
+const descriptionSchema = z.string().min(0, "Its an optional thing")
 
 
 export default function CreateGroupDialoug({ onCancel, onAction, actionButton = "Confirm"}:CreateGroupDialogProps) {
@@ -33,16 +33,27 @@ export default function CreateGroupDialoug({ onCancel, onAction, actionButton = 
     }
 
     const handelSubmit = async ()=> {
+        if(!user) return
         try {
-            if(!user) return
             setIsLoading(true)
-            console.log("data :", {
-                userId: user.id,
-                userName: user.username,
-                name: name,
-                description: description,
-                groupImage: groupImage
-            })
+            nameSchema.parse(name)
+            descriptionSchema.parse(description)
+            setIsLoading(false)
+            setIsSuccess(false)
+        } catch (err) {
+            if (err instanceof z.ZodError) {
+                setMessage(err.errors[0].message || "Invalid input");
+            } else {
+                setMessage("An unexpected error occurred");
+            }
+            setTimeout(() => {
+                setMessage("")
+                onAction()
+            }, 2000);
+            return;
+        }
+        try {
+            setIsLoading(true)
             const res = await axios.post(process.env.NEXT_PUBLIC_BASE_URL + "/api/groups", {
                 userId: user.id,
                 userName: user.username,
@@ -58,10 +69,10 @@ export default function CreateGroupDialoug({ onCancel, onAction, actionButton = 
                 setMessage("")
                 onAction()
             }, 2000);
-        } catch (error) {
+        } catch (error: any) {
             setIsLoading(false)
             setIsSuccess(false)
-            setMessage("something went wrong try again..")
+            setMessage( error.response?.data?.error ||"something went wrong try again..")
             setTimeout(() => {
                 setMessage("")
             }, 2000);
@@ -82,17 +93,15 @@ export default function CreateGroupDialoug({ onCancel, onAction, actionButton = 
             <div>
                 <InputContainer 
                     type="text"
-                    label="Group Name"
                     placeholder='Enter the group name'
                     getValue={(value)=> setName(value)}
-                    validationSchema={nameSchema}
+
                 />
                 <InputContainer 
                     type="text"
-                    label="Description"
                     placeholder='Describe about group'
                     getValue={(value)=> setDescription(value)}
-                    validationSchema={descriptionSchema}
+                    icon={<TbFileDescription />}
                 />
                 <div>
                     <p className=' font-semibold '>Group Image</p>
