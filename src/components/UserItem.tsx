@@ -31,9 +31,9 @@ export default function UserItem({id, name, username, profileImage}:UserItemProp
   return (
     <div
         onClick={handelClick} 
-        className='p-3 bg-fuchsia-200 flex items-center  gap-3 rounded-md shadow-md cursor-pointer'>
+        className='p-3 bg-card flex items-center  gap-3 rounded-md shadow-md cursor-pointer'>
         <div
-        className='w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center'
+        className='w-[50px] h-[50px] rounded-full bg-primary-foreground/30 flex items-center justify-center'
         >
             {profileImage && <img
                 src={profileImage} 

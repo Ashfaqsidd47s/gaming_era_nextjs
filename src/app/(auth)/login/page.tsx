@@ -8,6 +8,7 @@ import { getGoogleOAuthUrl } from '@/lib/googleOauthUtils';
 import { IoMdUnlock } from "react-icons/io";
 import { ImPacman } from "react-icons/im";
 import { motion } from "framer-motion"
+import Link from 'next/link';
 
 export default function page() {
   const [username, setUsername] = useState<string>("");
@@ -67,6 +68,7 @@ export default function page() {
     <div className=' h-screen flex items-center justify-center '>
       <motion.div 
         className=' bg-card p-[1px] rounded-2xl glowing-border'
+        style={{backgroundImage: "conic-gradient(from 0deg, #4cd137, #184910, #184910, #4cd137)"}}
         animate={{
           background: [
             'conic-gradient(from 0deg, #4cd137, #184910, #184910, #4cd137)',
@@ -117,6 +119,7 @@ export default function page() {
             >
             Login with google
           </button> 
+          <p className=' mt-1 text-sm font-thin text-muted'>Don't have an account ? <Link href="/register" className=' underline text-primary font-normal'>Sign Up</Link></p>
         </div>
 
       </motion.div>

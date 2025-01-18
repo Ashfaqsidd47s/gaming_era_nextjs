@@ -13,6 +13,7 @@ export async function GET(request: Request) {
         const group = await prisma.group.findUnique({
             where: {id: groupId},
             select: {
+                id: true,
                 name: true,
                 description: true,
                 adminName: true,

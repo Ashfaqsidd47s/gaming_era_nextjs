@@ -85,7 +85,8 @@ export default function page() {
 
       try {
         setIsRequestingFollowers(true)
-        const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user/followers/noconversation/" + user?.id)
+        const res = await axios.get(process.env.NEXT_PUBLIC_BASE_URL + "/api/user/followers/" + user?.id)
+        console.log(res.data)
         setFollowers(res.data)
         setIsRequestingFollowers(false)
       } catch (err) {
@@ -104,6 +105,7 @@ export default function page() {
       <div className={`p-3 border-b border-b-primary/90 ${conversations.length == 0? " hidden": "block"}`}>
         {isRequestingCon ?
            <div>
+           <UserSuggestionSkeleton />
            <UserSuggestionSkeleton />
            <UserSuggestionSkeleton />
            <UserSuggestionSkeleton />

@@ -35,23 +35,23 @@ export default function UserSuggestion({id, name, username, profileImage, reques
   }
 
   return (
-    <div className='p-3 bg-fuchsia-200 flex items-center justify-between gap-3 rounded-md'>
+    <div className='p-3 bg-card flex items-center justify-between gap-3 rounded-md'>
       <div
-                className='w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center'
+                className='w-[50px] h-[50px] rounded-full bg-background flex items-center justify-center'
             >
-              {profileImage && <img
-                 src={profileImage} 
+              <img
+                 src={profileImage == "" || profileImage == null ? "/avatar.png" : profileImage} 
                  className=' w-full h-full object-cover rounded-[inherit] object-center'
-              alt="" />}
+              alt="" />
             </div>
             <div className=' flex-grow'>
                 <h2 className=' text-xl font-semibold'>
                     {name}
                 </h2>
-                <p>@{username}</p>
+                <p className=' text-muted'>@{username}</p>
             </div>
             <button
-                className={` min-w-[110px] p-2 bg-primary text-primary-foreground flex items-center justify-center rounded-lg hover:bg-primary/90 ${isRequstSent? "bg-secondary text-secondary-foreground hover:bg-secondary/90": "bg-primary text-primary-foreground"}`} 
+                className={` min-w-[110px] p-2 bg-primary/80 text-primary-foreground flex items-center justify-center rounded-lg hover:bg-primary/90 ${isRequstSent? "bg-secondary/80 text-secondary-foreground hover:bg-secondary/90": "bg-primary text-primary-foreground"}`} 
                 onClick={sendFolowRequest}
             >{isLoading? <BiLoaderAlt className=' animate-spin text-2xl' />: isRequstSent? "Cancel": "Follow"}</button>
     </div>

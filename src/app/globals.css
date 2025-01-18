@@ -85,24 +85,42 @@ body {
     @apply bg-background text-foreground;
   }
 
+
+  .glowing-border {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .glowing-border::after{
+    content: "";
+    width: calc(100% + 1px);
+    height: calc(100% + 1px);
+    background-image: inherit;
+    border-radius: inherit;
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    z-index: -1;
+    opacity: 0.2;
+    filter: blur(20px);
+    z-index: -1;
+  }
+
+  .pulse-animation {
+    @apply z-10 relative;
+   
+  }
+
+  .pulse-animation::before {
+    @apply z-0 absolute bg-primary/40 animate-ping;
+    top: 0;
+    left: 0;
+    content: "";
+    width: calc(100%);
+    height: calc(100%);
+    border-radius: inherit;
+  }
 }
 
 
 
-.glowing-bg {
-  position: relative;
-  z-index: 1;
-}
-
-.glowing-bg::after{
-  content: "";
-  padding: 20px;
-  width: 100%;
-  height: 100%;
-  background-image: conic-gradient(--primary, transparent);
-  border-radius: inherit;
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  z-index: -1;
-}

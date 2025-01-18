@@ -3,11 +3,14 @@
 import MessageItem from '@/components/MessageItem';
 import ChatHeadderSkeleton from '@/components/skeletons/ChatHeadderSkeleton';
 import MessageItemSkeleton from '@/components/skeletons/MessageItemSkeleton';
+import TextingIcon from '@/components/TextingIcon';
+import VideoCall from '@/components/VideoCall';
 import userStore from '@/store/userStore';
 import axios from 'axios';
 import { usePathname } from 'next/navigation';
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
 import { BsThreeDotsVertical } from 'react-icons/bs';
+import { IoCall, IoVideocam } from 'react-icons/io5';
 
 
 interface MessageData {
@@ -39,10 +42,28 @@ export default function page() {
     const [sendingStatus, setSendingStatus] = useState<"sending"| "success"| "failed">("sending")
     const ws = useRef<WebSocket | null>(null);
     const conversationId = useRef<string>("")
+    const [isTyping, setIsTyping] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
+    const [isSocketAlive, setIsSocketAlive] = useState(false);
+    const [isAnswering, setIsAnswering] = useState(false)
+    const [offer, setOffer] = useState("")
     
     const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.target.value);
+        sendCustomMessage("typing")
     };
+    const sendCustomMessage = (type: string) => {
+        if(!user) return;
+        if(ws.current && ws.current.readyState === WebSocket.OPEN) {
+            ws.current.send(JSON.stringify({
+                type: type,
+                payload: {
+                    userId: user?.id,
+                    conversationId: conversationId.current,
+                }
+            }))
+        }
+    }
 
     const sendMessage = async ()=> {
         const sendToDBWithoutWS = async  ()=> {
@@ -129,15 +150,16 @@ export default function page() {
         }
     }, [text]);
 
+    // SCROLL TO BOTTOM
     useEffect(() => {
         
-        // SCROLL TO BOTTOM
         if (chatContainerRef.current) {
             
             chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-    }, [user, userData, messages]);
+    }, [user, userData, messages, isTyping]);
     
+    //socket connection
     useEffect(() => {
 
         const WS_URL = process.env.NEXT_PUBLIC_WS_URL ? process.env.NEXT_PUBLIC_WS_URL : "";
@@ -145,7 +167,7 @@ export default function page() {
         ws.current = socket;
 
         socket.onopen = ()=> {
-            console.log("websocket connected successfully")
+            setIsSocketAlive(true)
             socket.send(JSON.stringify({
                 type: "join_conversation",
                 payload: {
@@ -156,26 +178,58 @@ export default function page() {
         }
 
         socket.onmessage  = (e) => {
-            console.log("Message recieved :", e.data)
             const recievedMessage = JSON.parse(e.data)
-            if(recievedMessage.type == "normal") {
-                console.log(messages.length)
-                setMessages((messages) => [...messages, {
-                    message: String(recievedMessage.payload.text),
-                    senderId: String( recievedMessage.payload.userId),
-                    createdAt: (new Date()).toString()
-                }])
+            switch (recievedMessage.type) {
+                case "normal":
+                    setIsTyping(false)
+                    setMessages((messages) => [...messages, {
+                        message: String(recievedMessage.payload.text),
+                        senderId: String( recievedMessage.payload.userId),
+                        createdAt: (new Date()).toString()
+                    }])
+                    break;
+                case "online":
+                    setIsConnected(true);
+                    break;
+
+                case "typing":
+                    setIsTyping(true);
+                    break;
+
+                case "not_typing":
+                    setIsTyping(false);
+                    break;
+
+                case "offline":
+                    setIsConnected(false);
+                    break;
+
+                case "list":
+                    if(Array(recievedMessage.users).find((u) => u.id == userData?.id))
+                        setIsConnected(true)
+                    break;
+                case "offer":
+                    setIsAnswering(true)
+                    setOffer(recievedMessage.payload.text)
+                    break;
+                case "error":
+                    console.log("message :",recievedMessage)
+                    break;
+            
+                default:
+                    console.log("message recieved",recievedMessage)
+                    break;
             }
         }
 
         socket.onclose = ()=> {
             console.log("websocket disconnected")
-
+            setIsSocketAlive(false)
         }
 
-        socket.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+        // socket.onerror = (error) => {
+        //     console.error('WebSocket error:', error);
+        // };
 
         return () => {
             socket.close();
@@ -187,17 +241,31 @@ export default function page() {
     <div className='h-[calc(100vh-178px)] md:h-[calc(100vh-82px)] relative'>
         {userData == null ? 
             <ChatHeadderSkeleton />
-        :<div className=' px-4 bg-card w-full h-[55px] shadow-lg flex items-center justify-between absolute top-[0px] border-x border-x-popover'>
-            <div className='flex items-center gap-3'>
+        :<div className=' px-4 bg-card w-full h-[55px] shadow-lg flex items-center justify-between absolute top-[0px] border-x border-x-popover scrollbar'>
+            <div className='flex items-center gap-3 '>
                 <div className=' bg-popover w-[40px] h-[40px] rounded-full overflow-hidden flex items-center justify-center shadow-sm '>
                     <img 
                         className=' w-full h-full object-cover object-center'
                     src={userData.profileImage == null || userData.profileImage == ""? "/avatar.png": userData.profileImage} alt="" />
                 </div>
-                <div className=' font-semibold text-lg'>{userData.name} <span className=' font-normal text-sm text-primary/80'>(online)</span></div>
+                <div className=' font-semibold text-lg'>
+                    {userData.name} 
+                </div>
+                <span className={` w-[10px] h-[10px] rounded-full ${isConnected? "bg-primary/70 pulse-animation" : "bg-primary-foreground/40"}`}></span>
             </div>
+            <p className={`${isSocketAlive? "text-primary":"text-destructive"}`}>{isSocketAlive ? "connected...": "disconnected..."}</p>
             <div className='flex items-center gap-3'>
-                <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover'>
+                {ws.current != null && user ? 
+                <VideoCall 
+                    userId={user.id}
+                    conversationId={conversationId.current}
+                    isAnswering
+                    newOffer={isAnswering ? offer :""}
+                 /> : <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80 animate-pulse'></div> }
+                <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80'>
+                    <IoCall />
+                </div>
+                <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80'>
                     <BsThreeDotsVertical />
                 </div>
             </div>
@@ -223,7 +291,9 @@ export default function page() {
                     message={m.message}
                     sentAt={m.createdAt}
                 />
-            ))}
+            ))
+            }
+            {isTyping && <TextingIcon image={userData ? userData.profileImage : "/avatar.png"} />}
         </div>
         <div className=" z-10 p-4 bg-popover shadow-lg rounded-md w-full flex items-end gap-2 absolute bottom-1">
             <textarea
@@ -231,6 +301,7 @@ export default function page() {
                 value={text}
                 onChange={handleInputChange}
                 rows={1}
+                onBlur={()=> sendCustomMessage("not_typing")}
                 className=" bg-card max-h-[150px] w-full p-3 text-base border border-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/90 resize-none overflow-hidden"
                 placeholder="Type your text here..."
             />
