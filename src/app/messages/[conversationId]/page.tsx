@@ -1,11 +1,13 @@
 "use client"
 
+import CallNotification from '@/components/CallNotification';
 import MessageItem from '@/components/MessageItem';
 import ChatHeadderSkeleton from '@/components/skeletons/ChatHeadderSkeleton';
 import MessageItemSkeleton from '@/components/skeletons/MessageItemSkeleton';
 import TextingIcon from '@/components/TextingIcon';
 import VideoCall from '@/components/VideoCall';
 import userStore from '@/store/userStore';
+import useWebSocketStore from '@/store/websocketStore';
 import axios from 'axios';
 import { usePathname } from 'next/navigation';
 import React, { ChangeEvent, useEffect, useRef, useState } from 'react'
@@ -40,13 +42,13 @@ export default function page() {
     const pathname = usePathname();
     const [isSent, setIsSent] = useState(false);
     const [sendingStatus, setSendingStatus] = useState<"sending"| "success"| "failed">("sending")
-    const ws = useRef<WebSocket | null>(null);
+    const socket = useWebSocketStore((state)=> state.ws)
+    const initializeWebSocket = useWebSocketStore((state)=> state.initializeWebSocket)
     const conversationId = useRef<string>("")
     const [isTyping, setIsTyping] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [isSocketAlive, setIsSocketAlive] = useState(false);
-    const [isAnswering, setIsAnswering] = useState(false)
-    const [offer, setOffer] = useState("")
+
     
     const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setText(e.target.value);
@@ -54,8 +56,8 @@ export default function page() {
     };
     const sendCustomMessage = (type: string) => {
         if(!user) return;
-        if(ws.current && ws.current.readyState === WebSocket.OPEN) {
-            ws.current.send(JSON.stringify({
+        if(socket) {
+            socket.send(JSON.stringify({
                 type: type,
                 payload: {
                     userId: user?.id,
@@ -90,13 +92,13 @@ export default function page() {
         }
 
         if(!user) return;
-        if(ws.current && ws.current.readyState === WebSocket.OPEN) {
+        if(socket ) {
             setMessages((messages) => [...messages, {
                 message: text,
                 createdAt: new  Date().toISOString(),
                 senderId: user.id,
             }])
-            ws.current.send(JSON.stringify({
+            socket.send(JSON.stringify({
                 type: "send_message",
                 payload: {
                     userId: user?.id,
@@ -161,10 +163,13 @@ export default function page() {
     
     //socket connection
     useEffect(() => {
-
         const WS_URL = process.env.NEXT_PUBLIC_WS_URL ? process.env.NEXT_PUBLIC_WS_URL : "";
-        const  socket = new WebSocket(WS_URL)
-        ws.current = socket;
+        const ws = new WebSocket(WS_URL)
+        initializeWebSocket(ws);
+    }, [user, pathname, userData])
+    
+    useEffect(() => {
+        if(!socket) return;
 
         socket.onopen = ()=> {
             setIsSocketAlive(true)
@@ -208,10 +213,6 @@ export default function page() {
                     if(Array(recievedMessage.users).find((u) => u.id == userData?.id))
                         setIsConnected(true)
                     break;
-                case "offer":
-                    setIsAnswering(true)
-                    setOffer(recievedMessage.payload.text)
-                    break;
                 case "error":
                     console.log("message :",recievedMessage)
                     break;
@@ -234,7 +235,7 @@ export default function page() {
         return () => {
             socket.close();
         };
-    }, [user, pathname, userData])
+    }, [user, pathname, userData, socket])
     
 
   return (
@@ -255,12 +256,12 @@ export default function page() {
             </div>
             <p className={`${isSocketAlive? "text-primary":"text-destructive"}`}>{isSocketAlive ? "connected...": "disconnected..."}</p>
             <div className='flex items-center gap-3'>
-                {ws.current != null && user ? 
+                { user ? 
                 <VideoCall 
                     userId={user.id}
                     conversationId={conversationId.current}
-                    isAnswering
-                    newOffer={isAnswering ? offer :""}
+                    name={user.name}
+                    profileImage={user.profileImage}
                  /> : <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80 animate-pulse'></div> }
                 <div className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80'>
                     <IoCall />

@@ -1,9 +1,11 @@
 "use client"
+import useWebSocketStore from '@/store/websocketStore';
 import React, { useEffect, useRef, useState } from 'react'
 import { FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { IoVideocam } from 'react-icons/io5';
 import { MdCallEnd } from 'react-icons/md';
 import { PiMicrophoneFill, PiMicrophoneSlashFill } from "react-icons/pi";
+import CallNotification from './CallNotification';
 
 const servers = {
   iceServers: [
@@ -15,11 +17,11 @@ const servers = {
 interface VideoCallProp {
   userId: string;
   conversationId: string;
-  isAnswering?: boolean;
-  newOffer?: string
+  name: string;
+  profileImage: string;
 }
 
-export default function VideoCall({ userId, conversationId, isAnswering = false, newOffer = ""}:VideoCallProp) {
+export default function VideoCall({userId, conversationId, name, profileImage}:VideoCallProp) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [isVideoOn,setIsVideoOn] = useState<boolean>(true)
   const [isAudioOn,setIsAudioOn] = useState<boolean>(true)
@@ -30,10 +32,12 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
   const peerConnection = useRef<RTCPeerConnection | null>(null);
   const offerString = useRef<string>("");
   const answerString = useRef<string>("");
-  const [testValue, setTestValue] = useState("")
+  const socket = useWebSocketStore((state)=> state.ws)
+  const [isCalled, setIsCalled] = useState(false)
+    
 
   const generateOffer = async ()=> {
-    if(!peerConnection.current){
+    if(!peerConnection.current || !socket){
       console.log("peeer conneciton is not initilaized")
       return;
     }
@@ -46,7 +50,17 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
       peerConnection.current.onicecandidate = (e) => {
         if (e.candidate) {
           offerString.current = JSON.stringify(peerConnection.current?.localDescription);
-          setTestValue(offerString.current)
+          console.log("offer generated :", offerString.current)
+          if(socket) {
+            socket.send(JSON.stringify({
+              type: "offer",
+              payload: {
+                userId,
+                conversationId,
+                text: offerString.current
+              }
+            })) 
+          }
         } 
       };
     } catch (err) {
@@ -54,7 +68,6 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
     }
   }
 
-  
   
   const generateAnswer = async (recievedStr: string)=> {
     if(!peerConnection.current){
@@ -71,14 +84,20 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
       const answer = await peerConnection.current.createAnswer();
       await peerConnection.current.setLocalDescription(answer)
       
-      console.log("peer connection :", peerConnection)
-      console.log("offer string :", offerString.current)
-      console.log("answer string :", answerString.current)
       peerConnection.current.onicecandidate =  async (e) => {
         if(e.candidate){
             answerString.current = JSON.stringify(peerConnection.current?.localDescription)
-            setTestValue(answerString.current)
-            console.log("answer generated ")
+            console.log("answer generated")
+            if(socket){
+              socket.send(JSON.stringify({
+                type: "answer",
+                payload: {
+                  userId,
+                  conversationId,
+                  text: answerString.current
+                }
+              }))
+            }
         }
       }
     } catch (err) {
@@ -89,13 +108,27 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
   const addAnswer = async (recievedStr: string)=> {
     answerString.current = recievedStr;
     const answer = JSON.parse(answerString.current)
-    if(peerConnection.current && !peerConnection.current.currentRemoteDescription){
-      peerConnection.current.setRemoteDescription(answer);
-      console.log("answer added ")
+    try {
+      if(!peerConnection.current) {
+        console.log("peerconection not found")
+        return;
+      }
+      if (peerConnection.current.signalingState === "stable") {
+        console.log("Remote description already set. Skipping...");
+        return;
+      }
+      if(peerConnection.current.signalingState === "have-local-offer" ||
+        peerConnection.current.signalingState === "have-remote-offer"
+      ){
+        await peerConnection.current.setRemoteDescription(answer);
+        
+      }
+    } catch (err) {
+      
     }
   }
 
-  const initializeMedia = async ()=> {
+  const initializeMedia = async (isAnswering: boolean)=> {
     try {
       const lVideoSrc = await navigator.mediaDevices.getUserMedia({video: {
         width: {ideal: 1280},
@@ -128,10 +161,59 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
         })
       }
 
-      // generateoffer or answer as well 
+      if(isAnswering ) {
+        generateAnswer(offerString.current)
+      } else {
+        generateOffer()
+      }
+
     } catch (err) {
       console.log("error while capturing video")
     }
+  }
+
+  const clearMedia = () => {
+    // Stop all
+    if (localMediaStreamRef.current) {
+      localMediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      localMediaStreamRef.current = null;
+    }
+  
+    // Stop all tracks
+    if (remoteMediaStreamRef.current) {
+      remoteMediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      remoteMediaStreamRef.current = null;
+    }
+  
+    // Close the peer connection
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+  
+    
+    
+  
+    console.log("Media cleared and call ended message sent.");
+  };
+
+  const endCall = () => {
+    clearMedia()
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "cancel_offer",
+          payload: {
+            userId,
+            conversationId,
+            text: "Call ended",
+          },
+        })
+      );
+    }
+
+    setIsOpen(false);
   }
 
   const toggleVideo = () => {
@@ -153,12 +235,65 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
     }
   }
   
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleMessage = (event: MessageEvent) => {
+      const receivedData = JSON.parse(event.data);
+      console.log("Received in VideoCall:", receivedData);
+      if(receivedData.type == "offer") {
+        setIsCalled(true)
+        offerString.current = receivedData.payload.text;
+      }
+      if(receivedData.type == "cancel_offer") {
+        setIsCalled(false)
+        setIsOpen(false);
+        offerString.current = "";
+        clearMedia();
+        setIsOpen(false)
+      }
+      if(receivedData.type == "answer") {
+        setIsCalled(false);
+        answerString.current = receivedData.payload.text
+        addAnswer(answerString.current)
+      }
+      
+    };
+
+    socket.addEventListener("message", handleMessage);
+
+    // Cleanup
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket]);
+
+  const handleAnswerOfCall = (val: boolean) => {
+    if(val) {
+      setIsCalled(false)
+      initializeMedia(val)
+      setIsOpen(val)
+    } else {
+      setIsCalled(false)
+      socket?.send(JSON.stringify({
+        type: "cancel_offer",
+        payload: {
+          userId,
+          conversationId,
+          text: "just cancle it"
+        }
+      }))
+    }
+  }
+
+  
   
 
   return (
     <div className=' flex items-center justify-center'>
         <div
-            onClick={() => { setIsOpen(!isOpen); initializeMedia()}} 
+            onClick={() => { setIsOpen(!isOpen); initializeMedia(false)}} 
             className=' w-[35px] h-[35px] rounded-full flex items-center justify-center shadow-sm bg-popover hover:bg-background cursor-pointer hover:text-primary/80'>
             <IoVideocam />
         </div>
@@ -176,10 +311,6 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
             playsInline
             ></video>
           <div className=' p-4 absolute bottom-5 flex items-center justify-center gap-3 rounded-2xl bg-primary/10 z-30'>
-            <textarea value={testValue} id="" onChange={(e) => setTestValue(e.target.value)}></textarea>
-            <button onClick={generateOffer}>genrate offer</button>
-            <button onClick={()=> generateAnswer(testValue)}>genrate answer</button>
-            <button onClick={()=> addAnswer(testValue)}>add answer</button>
             <button 
               onClick={toggleVideo}
               className={` w-[60px] h-[50px] rounded-2xl flex items-center justify-center bg-background text-xl ${isVideoOn ?  "bg-background hover:bg-card": " bg-destructive/20 hover:bg-destructive/30"}`}
@@ -189,11 +320,16 @@ export default function VideoCall({ userId, conversationId, isAnswering = false,
               className={` w-[60px] h-[50px] rounded-2xl flex items-center justify-center bg-background text-xl ${isAudioOn ?  "bg-background hover:bg-card": " bg-destructive/20 hover:bg-destructive/30"}`}
             >{isAudioOn ? <PiMicrophoneFill /> : <PiMicrophoneSlashFill />}</button>
             <button
-              onClick={()=> setIsOpen(!isOpen)}
+              onClick={()=> endCall()}
               className=' w-[60px] h-[50px] rounded-2xl flex items-center justify-center text-3xl bg-destructive'
             ><MdCallEnd /></button>
           </div>
         </div>
+        {isCalled ? <CallNotification 
+          answerOfCall={handleAnswerOfCall}
+          name={name}
+          profileImage={profileImage}
+        />: <></>}
     </div>
   )
 }
