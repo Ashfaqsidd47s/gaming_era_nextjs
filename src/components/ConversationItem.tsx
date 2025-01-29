@@ -18,7 +18,7 @@ export default function ConversationItem({id, name, username, lastSeen, profileI
 
   return (
     <div 
-      className='  p-2 flex items-center gap-2 cursor-pointer rounded-md bg-card shadow-md'>
+      className='  p-2 flex items-center gap-2 cursor-pointer rounded-md bg-card shadow-md hover:bg-popover mb-1'>
       <div className=' w-[50px] h-[50px] rounded-full flex items-center justify-center overflow-hidden'>
         <img
           className='w-full h-full object-cover object-center' 

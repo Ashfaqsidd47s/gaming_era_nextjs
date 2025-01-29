@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react'
 
 interface PostData {
   id: string;
+  userId: string;
   content: string;
   createdAt: string;
   img: string;
@@ -51,6 +52,7 @@ export default function page() {
           <Post 
             key={post.id}
             id={post.id}
+            userId={post.userId}
             content={post.content}
             username={post.user.name}
             img={post.img}

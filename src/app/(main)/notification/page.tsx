@@ -43,7 +43,7 @@ export default function page() {
 
   return (
     <div>
-        {requests.length > 0 && 
+        {requests.length > 0 ? 
             <>
             <h3 className=' p-2 font-semibold text-lg'>Follow Requests</h3>
             <div className=' p-1 w-full flex flex-col gap-1'>
@@ -62,7 +62,8 @@ export default function page() {
                />
             ))}
             </div>
-            </>
+            </> :
+            <h2 className=' p-4 text-center text-muted text-xl'>No Notificaiotn found yet ...</h2>
         }
     </div>
   )

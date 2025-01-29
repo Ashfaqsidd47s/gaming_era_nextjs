@@ -45,6 +45,7 @@ export async function GET(request: Request) {
         const posts = await prisma.post.findMany({
             select: {
                 id: true,
+                userId: true,
                 content: true,
                 img: true,
                 createdAt: true,

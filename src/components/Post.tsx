@@ -5,11 +5,13 @@ import React, { useState } from 'react'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 import { IoMdHeart, IoMdHeartEmpty } from 'react-icons/io';
 import TimeAgo from './TimeAgo';
-import { MdComment } from 'react-icons/md';
+import { MdComment, MdDelete } from 'react-icons/md';
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
+import DialogBox from './DialougBox';
 
 interface postProps {
     id: string;
+    userId: string;
     username: string;
     postedAt: string;
     content: string;
@@ -20,11 +22,12 @@ interface postProps {
     isLiked: boolean;
 }
 
-export default function Post({id, content, username, postedAt, img, userImg, likes,comments, isLiked} : postProps) {
+export default function Post({id, userId, content, username, postedAt, img, userImg, likes,comments, isLiked} : postProps) {
     const user = userStore((state) => state.user)
     const [curIsLiked, setCurIsLiked] = useState(isLiked)
     const [curLikes, setCurLikes] = useState(likes)
     const [isSaved, setIsSaved] = useState(false)
+    const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
     const updateLike = async ()=> {
         try {
@@ -47,6 +50,15 @@ export default function Post({id, content, username, postedAt, img, userImg, lik
         setIsSaved(!isSaved)
     }
 
+    const deletePost = async ()=> {
+        try {
+            const res = await axios.delete(process.env.NEXT_PUBLIC_BASE_URL + "/api/posts/data/" + id)
+            window.location.reload()
+        } catch (err) {
+            
+        }
+    }
+
   return (
     <div className=' p-4 rounded-md bg-popover'>
         <header className='py-3  flex items-center justify-between gap-3'>
@@ -65,10 +77,25 @@ export default function Post({id, content, username, postedAt, img, userImg, lik
                 </h2>
                 <p  className=' text-sm text-muted'><TimeAgo date={postedAt} /></p>
             </div>
-            <div
-                className='w-[40px] h-[40px] rounded-full  flex items-center justify-center text-xl bg-card' 
-            >
-                <BsThreeDotsVertical />
+            <div className=' flex items-center gap-2'>
+                { userId == user?.id && <button
+                    onClick={()=> setIsDeleteOpen(true)}
+                    className='w-[40px] h-[40px] rounded-full  flex items-center justify-center text-xl bg-card hover:bg-destructive/20' 
+                >
+                    <MdDelete />
+                </button>
+                }
+                {isDeleteOpen && <DialogBox
+                    title='Confirmation'
+                    description='Are you sure you want to delete this post ?'
+                    onAction={deletePost}
+                    onCancel={() => setIsDeleteOpen(false)}
+                 />}
+                <button
+                    className='w-[40px] h-[40px] rounded-full  flex items-center justify-center text-xl bg-card' 
+                >
+                    <BsThreeDotsVertical />
+                </button>
             </div>
         </header>
         <p className=' my-2 text-lg font-semibold'>{content}</p>

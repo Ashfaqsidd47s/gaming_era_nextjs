@@ -17,24 +17,18 @@ export async function GET(req: Request) {
             where: {
                 Follow: {
                     some: {
-                        followerId: userId,
-                    }
+                        followingId: userId,
+                    },
                 },
-                AND: [
-                    {
-                        ConversationUser1: {
-                            none: {
-                                user2Id: userId,
-                            }
-                        },
-                        ConversationUser2: {
-                            none: {
-                                user1Id: userId,
-                            }
-                        },
-                        NOT: {id: userId}
-                    }
-                ]
+                AND: {
+                    ConversationUser1: {
+                        none:{user2Id: userId}
+                    },
+                    ConversationUser2: {
+                        none:{user1Id: userId}
+                    },
+                }
+                
             },
             select: {
                 id: true,

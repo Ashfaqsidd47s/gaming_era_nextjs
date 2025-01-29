@@ -105,9 +105,9 @@ export default function Sidebar() {
                         <img src={user.profileImage} alt="" />  
                     </div>
                     <div className='hidden lg:block' >
-                        <h2 className=' w-[70%] font-semibold truncate'>{user.name}</h2>
+                        <h2 className=' w-[90%] font-semibold truncate'>{user.name}</h2>
                         <p
-                            className='w-[70%] text-sm text-primary/80 truncate'
+                            className='w-[100%] text-sm text-primary/80 truncate'
                         >@{user.username}</p>
                     </div>
                 </div>

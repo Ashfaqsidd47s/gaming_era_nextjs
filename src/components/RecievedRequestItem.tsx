@@ -42,7 +42,7 @@ export default function RecievedRequestItem({id, user_id, name, username, profil
     
 
   return (
-    <div className='p-3 bg-fuchsia-200 flex flex-col md:flex-row items-center justify-between gap-3 rounded-md'>
+    <div className='p-3 bg-card flex flex-col md:flex-row items-center justify-between gap-3 rounded-md'>
         <div className='w-full flex-grow flex items-center gap-3'>
             <div
                 className='w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center'
@@ -56,7 +56,7 @@ export default function RecievedRequestItem({id, user_id, name, username, profil
                 <h2 className=' text-xl font-semibold'>
                     {name}
                 </h2>
-                <p>@{username}</p>
+                <p className=" text-muted ">@{username}</p>
             </div>
         </div>
         {isSent ? 
